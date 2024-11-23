@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}View Reports{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Reports</h1>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Overview Stats -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Total Bookings</h5>
+                    <p class="card-text display-4">{{ total_bookings }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Total Revenue</h5>
+                    <p class="card-text display-4">${{ "%.2f"|format(total_revenue) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popular Routes -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Popular Routes</h5>
+        </div>
+        <div class="card-body">
+            {% if popular_routes %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Route</th>
+                            <th>Total Bookings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for route in popular_routes %}
+                        <tr>
+                            <td>{{ route.origin }} → {{ route.destination }}</td>
+                            <td>{{ route.booking_count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No route data available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Monthly Stats -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Monthly Statistics</h5>
+        </div>
+        <div class="card-body">
+            {% if monthly_stats %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Bookings</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in monthly_stats %}
+                        <tr>
+                            <td>{{ stat.month }}</td>
+                            <td>{{ stat.booking_count }}</td>
+                            <td>${{ "%.2f"|format(stat.revenue) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No monthly statistics available.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add any JavaScript for interactive charts here if needed
+</script>
+{% endblock %}

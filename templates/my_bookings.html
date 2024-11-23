@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookings - SkyBooker{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 mb-3">My Bookings</h1>
+            <p class="text-muted">Manage your flight bookings and view your travel history</p>
+        </div>
+    </div>
+
+    {% if bookings %}
+    <div class="row">
+        {% for booking in bookings %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 animate-fade-in">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Booking #{{ booking.reference }}</h5>
+                    {% if booking.status == 'confirmed' %}
+                        <span class="badge bg-success">Confirmed</span>
+                    {% elif booking.status == 'pending' %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    {% elif booking.status == 'cancelled' %}
+                        <span class="badge bg-danger">Cancelled</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="mb-1">{{ booking.flight.origin }} → {{ booking.flight.destination }}</h5>
+                                <p class="text-muted mb-0">Flight {{ booking.flight.flight_number }}</p>
+                            </div>
+                            <div class="text-end">
+                                <p class="mb-1"><i class="bi bi-calendar3 me-2"></i>{{ booking.flight.departure_time.strftime('%Y-%m-%d') }}</p>
+                                <p class="mb-0"><i class="bi bi-clock me-2"></i>{{ booking.flight.departure_time.strftime('%H:%M') }}</p>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <p class="text-muted mb-1">Passengers</p>
+                                <p class="mb-0"><i class="bi bi-person me-2"></i>{{ booking.number_of_seats }}</p>
+                            </div>
+                            <div class="col-6 text-end">
+                                <p class="text-muted mb-1">Total Price</p>
+                                <p class="mb-0"><i class="bi bi-cash me-2"></i>${{ "%.2f"|format(booking.total_price) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        {% if booking.status == 'confirmed' %}
+                            <a href="{{ url_for('main.view_booking', booking_id=booking.id) }}" 
+                               class="btn btn-outline-primary flex-grow-1">
+                                <i class="bi bi-eye me-2"></i>View Details
+                            </a>
+                            {% if booking.flight.departure_time.date() > today %}
+                            <form action="{{ url_for('main.cancel_booking', booking_id=booking.id) }}" method="POST" class="flex-grow-1">
+                                {{ form.csrf_token }}
+                                <button type="submit" class="btn btn-outline-danger w-100" 
+                                        onclick="return confirm('Are you sure you want to cancel this booking? This action cannot be undone.')">
+                                    <i class="bi bi-x-circle me-2"></i>Cancel
+                                </button>
+                            </form>
+                            {% endif %}
+                        {% elif booking.status == 'pending' %}
+                            <a href="{{ url_for('main.payment', booking_id=booking.id) }}" 
+                               class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-credit-card me-2"></i>Complete Payment
+                            </a>
+                            {% if booking.flight.departure_time.date() > today %}
+                            <form action="{{ url_for('main.cancel_booking', booking_id=booking.id) }}" method="POST" class="flex-grow-1">
+                                {{ form.csrf_token }}
+                                <button type="submit" class="btn btn-outline-danger w-100" 
+                                        onclick="return confirm('Are you sure you want to cancel this booking? This action cannot be undone.')">
+                                    <i class="bi bi-x-circle me-2"></i>Cancel
+                                </button>
+                            </form>
+                            {% endif %}
+                        {% elif booking.status == 'cancelled' %}
+                            <div class="alert alert-secondary mb-0 w-100">
+                                <i class="bi bi-info-circle me-2"></i>This booking has been cancelled
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="card p-5">
+                <i class="bi bi-calendar-x feature-icon mb-3"></i>
+                <h3>No Bookings Found</h3>
+                <p class="text-muted mb-4">You haven't made any bookings yet. Start your journey today!</p>
+                <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                    <i class="bi bi-search me-2"></i>Search Flights
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

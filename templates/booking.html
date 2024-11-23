@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Book Flight - SkyBooker{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.search_flights') }}">Flights</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Book Flight</li>
+                </ol>
+            </nav>
+            <h1 class="display-5 mb-3">Book Your Flight</h1>
+            <p class="text-muted">Complete your booking details to proceed</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Flight Details Card -->
+            <div class="card mb-4 animate-fade-in">
+                <div class="card-header">
+                    <h5 class="mb-0">Flight Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Flight Number</h6>
+                            <p class="mb-3">{{ flight.flight_number }}</p>
+                            
+                            <h6 class="text-muted mb-2">Route</h6>
+                            <p class="mb-3">{{ flight.origin }} → {{ flight.destination }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Departure Date</h6>
+                            <p class="mb-3">{{ flight.departure_time.strftime('%Y-%m-%d') }}</p>
+                            
+                            <h6 class="text-muted mb-2">Departure Time</h6>
+                            <p class="mb-3">{{ flight.departure_time.strftime('%H:%M') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Form -->
+            <div class="card animate-fade-in">
+                <div class="card-header">
+                    <h5 class="mb-0">Passenger Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('main.book_flight', flight_id=flight.id) }}">
+                        {{ form.csrf_token }}
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Number of Passengers</label>
+                            {{ form.number_of_seats(class="form-control", min="1", max=flight.available_seats) }}
+                            {% if form.number_of_seats.errors %}
+                                {% for error in form.number_of_seats.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Available seats: {{ flight.available_seats }}
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-arrow-right me-2"></i>Continue to Passenger Details
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Price Summary Card -->
+            <div class="card animate-fade-in">
+                <div class="card-header">
+                    <h5 class="mb-0">Price Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <p class="text-muted mb-1">Price per Passenger</p>
+                        <p class="h5 mb-3">${{ "%.2f"|format(flight.price) }}</p>
+                        
+                        <p class="text-muted mb-1">Estimated Total</p>
+                        <p class="h5 mb-0" id="totalPrice">${{ "%.2f"|format(flight.price) }}</p>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Final price will be calculated based on the number of passengers and any applicable taxes.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const seatsInput = document.querySelector('#number_of_seats');
+    const totalPriceElement = document.querySelector('#totalPrice');
+    const pricePerPassenger = {{ flight.price }};
+
+    seatsInput.addEventListener('input', function() {
+        const seats = parseInt(this.value) || 1;
+        const total = (seats * pricePerPassenger).toFixed(2);
+        totalPriceElement.textContent = `$${total}`;
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Employee Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Employee Dashboard</h1>
+        <div>
+            <a href="{{ url_for('employee.search') }}" class="btn btn-primary me-2">
+                <i class="bi bi-search"></i> Search
+            </a>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Total Flights</h5>
+                    <p class="display-4">{{ total_flights }}</p>
+                    <a href="{{ url_for('employee.flights') }}" class="btn btn-primary">View All Flights</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Total Bookings</h5>
+                    <p class="display-4">{{ total_bookings }}</p>
+                    <a href="{{ url_for('employee.bookings') }}" class="btn btn-primary">View All Bookings</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Available Flights</h5>
+                    <p class="display-4">{{ available_flights }}</p>
+                    <a href="{{ url_for('employee.flights') }}" class="btn btn-primary">Check Availability</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Flights -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Today's Flights</h5>
+        </div>
+        <div class="card-body">
+            {% if todays_flights %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Flight Number</th>
+                            <th>Route</th>
+                            <th>Departure</th>
+                            <th>Available Seats</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for flight in todays_flights %}
+                        <tr>
+                            <td>{{ flight.flight_number }}</td>
+                            <td>{{ flight.origin }} → {{ flight.destination }}</td>
+                            <td>{{ flight.departure_time.strftime('%H:%M') }}</td>
+                            <td>{{ flight.available_seats }}/{{ flight.total_seats }}</td>
+                            <td>
+                                <a href="{{ url_for('employee.view_flight', flight_id=flight.id) }}" 
+                                   class="btn btn-sm btn-info">View Details</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No flights scheduled for today.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Bookings -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Recent Bookings</h5>
+        </div>
+        <div class="card-body">
+            {% if recent_bookings %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Reference</th>
+                            <th>Passenger</th>
+                            <th>Flight</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in recent_bookings %}
+                        <tr>
+                            <td>{{ booking.booking_reference }}</td>
+                            <td>{{ booking.user.first_name }} {{ booking.user.last_name }}</td>
+                            <td>{{ booking.flight.flight_number }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if booking.status == 'confirmed' else 'warning' }}">
+                                    {{ booking.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('employee.view_booking', reference=booking.booking_reference) }}" 
+                                   class="btn btn-sm btn-info">View Details</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No recent bookings.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">Booking Confirmed!</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success mb-4">
+                        <h4 class="alert-heading">Thank you for booking with SkyBooker!</h4>
+                        <p>Your booking has been confirmed and your payment has been processed successfully.</p>
+                        <p>Booking Reference: <strong>{{ booking.booking_reference }}</strong></p>
+                    </div>
+
+                    <!-- Flight Details -->
+                    <div class="booking-details mb-4">
+                        <h4>Flight Details</h4>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Flight Number:</strong> {{ booking.flight.flight_number }}</p>
+                                        <p><strong>From:</strong> {{ booking.flight.origin }}</p>
+                                        <p><strong>To:</strong> {{ booking.flight.destination }}</p>
+                                        <p><strong>Number of Passengers:</strong> {{ booking.number_of_seats }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Date:</strong> {{ booking.flight.departure_time.strftime('%Y-%m-%d') }}</p>
+                                        <p><strong>Time:</strong> {{ booking.flight.departure_time.strftime('%H:%M') }}</p>
+                                        <p><strong>Total Amount Paid:</strong> ${{ "%.2f"|format(booking.total_price) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Passenger Details -->
+                    <div class="passenger-details mb-4">
+                        <h4>Passenger Information</h4>
+                        {% for passenger in booking.passenger_details %}
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Passenger {{ loop.index }}:</strong> {{ passenger.first_name }} {{ passenger.last_name }}</p>
+                                        <p class="mb-0"><strong>Passport:</strong> {{ passenger.passport_number }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-0"><strong>Date of Birth:</strong> {{ passenger.date_of_birth.strftime('%Y-%m-%d') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('main.my_bookings') }}" class="btn btn-primary">View My Bookings</a>
+                        <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary">Book Another Flight</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

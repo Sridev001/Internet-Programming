@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Flights{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Manage Flights</h1>
+        <div>
+            <button class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#addFlightModal">
+                Add New Flight
+            </button>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Flight Number</th>
+                            <th>Route</th>
+                            <th>Departure</th>
+                            <th>Arrival</th>
+                            <th>Price</th>
+                            <th>Available Seats</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for flight in flights %}
+                        <tr>
+                            <td>{{ flight.flight_number }}</td>
+                            <td>{{ flight.origin }} → {{ flight.destination }}</td>
+                            <td>{{ flight.departure_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ flight.arrival_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>${{ "%.2f"|format(flight.price) }}</td>
+                            <td>{{ flight.available_seats }}/{{ flight.total_seats }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info" onclick="viewBookings({{ flight.id }})">View Bookings</button>
+                                <button class="btn btn-sm btn-warning" onclick="editFlight({{ flight.id }})">Edit</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Flight Modal -->
+<div class="modal fade" id="addFlightModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Flight</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addFlightForm">
+                    <div class="mb-3">
+                        <label class="form-label">Flight Number</label>
+                        <input type="text" class="form-control" name="flight_number" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Origin</label>
+                        <input type="text" class="form-control" name="origin" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Destination</label>
+                        <input type="text" class="form-control" name="destination" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Departure Time</label>
+                        <input type="datetime-local" class="form-control" name="departure_time" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Arrival Time</label>
+                        <input type="datetime-local" class="form-control" name="arrival_time" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Price</label>
+                        <input type="number" class="form-control" name="price" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Total Seats</label>
+                        <input type="number" class="form-control" name="total_seats" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitAddFlight()">Add Flight</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Bookings Modal -->
+<div class="modal fade" id="bookingsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Flight Bookings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="bookingsModalBody">
+                <!-- Bookings will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Flight Modal -->
+<div class="modal fade" id="editFlightModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Flight</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editFlightForm">
+                    <input type="hidden" name="flight_id">
+                    <div class="mb-3">
+                        <label class="form-label">Flight Number</label>
+                        <input type="text" class="form-control" name="flight_number" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Origin</label>
+                        <input type="text" class="form-control" name="origin" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Destination</label>
+                        <input type="text" class="form-control" name="destination" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Departure Time</label>
+                        <input type="datetime-local" class="form-control" name="departure_time" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Arrival Time</label>
+                        <input type="datetime-local" class="form-control" name="arrival_time" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Price</label>
+                        <input type="number" class="form-control" name="price" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Total Seats</label>
+                        <input type="number" class="form-control" name="total_seats" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitEditFlight()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewBookings(flightId) {
+    const modal = new bootstrap.Modal(document.getElementById('bookingsModal'));
+    const modalBody = document.getElementById('bookingsModalBody');
+    
+    modalBody.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div></div>';
+    modal.show();
+    
+    fetch(`/admin/flights/${flightId}/bookings`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.bookings && data.bookings.length > 0) {
+                modalBody.innerHTML = `
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>User</th>
+                                    <th>Seats</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.bookings.map(booking => `
+                                    <tr>
+                                        <td>${booking.reference}</td>
+                                        <td>${booking.user}</td>
+                                        <td>${booking.seats}</td>
+                                        <td>$${booking.total.toFixed(2)}</td>
+                                        <td><span class="badge bg-${booking.status === 'confirmed' ? 'success' : 'warning'}">${booking.status}</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                modalBody.innerHTML = '<p class="text-center">No bookings found for this flight.</p>';
+            }
+        })
+        .catch(error => {
+            modalBody.innerHTML = '<div class="alert alert-danger">Error loading bookings.</div>';
+            console.error('Error:', error);
+        });
+}
+
+function submitAddFlight() {
+    const form = document.getElementById('addFlightForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    fetch('/admin/flights', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Error adding flight');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding flight');
+    });
+}
+
+function editFlight(flightId) {
+    fetch(`/admin/flights/${flightId}`)
+        .then(response => response.json())
+        .then(data => {
+            const form = document.getElementById('editFlightForm');
+            for (const [key, value] of Object.entries(data)) {
+                const input = form.elements[key];
+                if (input) {
+                    if (key.includes('time')) {
+                        input.value = value.slice(0, 16); // Format datetime for input
+                    } else {
+                        input.value = value;
+                    }
+                }
+            }
+            new bootstrap.Modal(document.getElementById('editFlightModal')).show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading flight details');
+        });
+}
+
+function submitEditFlight() {
+    const form = document.getElementById('editFlightForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    const flightId = data.flight_id;
+    
+    fetch(`/admin/flights/${flightId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Error updating flight');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating flight');
+    });
+}
+</script>
+{% endblock %}

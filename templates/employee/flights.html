@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Flights{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Manage Flights</h1>
+        <div>
+            <a href="{{ url_for('employee.search', type='flight') }}" class="btn btn-primary me-2">
+                <i class="bi bi-search"></i> Search Flights
+            </a>
+            <a href="{{ url_for('employee.dashboard') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card">
+        <div class="card-body">
+            {% if flights %}
+            <div class="table-responsive">
+                <table class="table" id="flightsTable">
+                    <thead>
+                        <tr>
+                            <th>Flight Number</th>
+                            <th>Route</th>
+                            <th>Schedule</th>
+                            <th>Duration</th>
+                            <th>Price</th>
+                            <th>Seats</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for flight in flights %}
+                        <tr>
+                            <td>{{ flight.flight_number }}</td>
+                            <td>
+                                {{ flight.origin }} → {{ flight.destination }}
+                            </td>
+                            <td>
+                                {{ flight.departure_time.strftime('%Y-%m-%d %H:%M') }}
+                                <br>
+                                <small class="text-muted">
+                                    Arrival: {{ flight.arrival_time.strftime('%Y-%m-%d %H:%M') }}
+                                </small>
+                            </td>
+                            <td>
+                                {% set duration = (flight.arrival_time - flight.departure_time) %}
+                                {{ '%dh %dm'|format(duration.total_seconds()//3600, (duration.total_seconds()%3600)//60) }}
+                            </td>
+                            <td>${{ "%.2f"|format(flight.price) }}</td>
+                            <td>
+                                {{ flight.available_seats }}/{{ flight.total_seats }}
+                                <div class="progress" style="height: 4px;">
+                                    {% set occupancy = ((flight.total_seats - flight.available_seats) / flight.total_seats * 100)|round|int %}
+                                    <div class="progress-bar bg-{{ 'success' if occupancy < 80 else 'warning' if occupancy < 90 else 'danger' }}" 
+                                         role="progressbar" 
+                                         style="width: {{ occupancy }}%">
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if flight.departure_time > now %}
+                                    {% if flight.available_seats > 0 %}
+                                        <span class="badge bg-success">Available</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Full</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">Departed</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('employee.view_flight', flight_id=flight.id) }}" 
+                                   class="btn btn-sm btn-info">View Details</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No flights found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#flightsTable').DataTable({
+            order: [[2, 'asc']], // Sort by departure time by default
+            pageLength: 25,
+            responsive: true
+        });
+    });
+</script>
+{% endblock %}

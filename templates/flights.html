@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - SkyBooker{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Search Results</li>
+                </ol>
+            </nav>
+            <h1 class="display-5 mb-3">Available Flights</h1>
+            <p class="text-muted">
+                {{ flights|length }} flights found from {{ search_params.origin }} to {{ search_params.destination }}
+                on {{ search_params.departure_date }}
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3">
+            <!-- Filters -->
+            <div class="card animate-fade-in">
+                <div class="card-header">
+                    <h5 class="mb-0">Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('main.search_flights') }}" class="vstack gap-4">
+                        <div class="form-group">
+                            <label class="form-label">Price Range</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" name="min_price" placeholder="Min" min="0">
+                                <span class="input-group-text">-</span>
+                                <input type="number" class="form-control" name="max_price" placeholder="Max" min="0">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Departure Time</label>
+                            <select class="form-select" name="departure_time">
+                                <option value="">Any Time</option>
+                                <option value="morning">Morning (6AM-12PM)</option>
+                                <option value="afternoon">Afternoon (12PM-6PM)</option>
+                                <option value="evening">Evening (6PM-12AM)</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-funnel me-2"></i>Apply Filters
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            {% if flights %}
+                {% for flight in flights %}
+                <div class="card mb-3 animate-fade-in">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-lg-3">
+                                <div class="text-center text-lg-start">
+                                    <h5 class="mb-1">{{ flight.departure_time.strftime('%H:%M') }}</h5>
+                                    <small class="text-muted">Flight {{ flight.flight_number }}</small>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <div class="text-center">
+                                        <strong>{{ flight.origin }}</strong>
+                                        <div class="text-muted small">{{ flight.departure_time.strftime('%H:%M') }}</div>
+                                    </div>
+                                    <div class="mx-3">
+                                        <i class="bi bi-arrow-right"></i>
+                                    </div>
+                                    <div class="text-center">
+                                        <strong>{{ flight.destination }}</strong>
+                                        <div class="text-muted small">{{ flight.arrival_time.strftime('%H:%M') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2">
+                                <div class="text-center">
+                                    <div class="text-muted small">Duration</div>
+                                    <strong>{{ flight.duration }}</strong>
+                                </div>
+                            </div>
+                            <div class="col-lg-3">
+                                <div class="text-center text-lg-end">
+                                    <h4 class="mb-1">${{ "%.2f"|format(flight.price) }}</h4>
+                                    <div class="text-muted small mb-2">
+                                        <i class="bi bi-person me-1"></i>{{ flight.available_seats }} seats left
+                                    </div>
+                                    <a href="{{ url_for('main.book_flight', flight_id=flight.id) }}" 
+                                       class="btn btn-primary {% if flight.available_seats == 0 %}disabled{% endif %}">
+                                        {% if flight.available_seats > 0 %}
+                                            <i class="bi bi-ticket-perforated me-2"></i>Book Now
+                                        {% else %}
+                                            <i class="bi bi-x-circle me-2"></i>Sold Out
+                                        {% endif %}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="card animate-fade-in">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-calendar-x display-4 mb-3"></i>
+                        <h3>No Flights Found</h3>
+                        <p class="text-muted mb-4">We couldn't find any flights matching your search criteria.</p>
+                        <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                            <i class="bi bi-search me-2"></i>Try Another Search
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Flight Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Flight Details</h1>
+        <div>
+            <a href="{{ url_for('employee.flights') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Flights
+            </a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Flight Information -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Flight Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Flight Number:</strong> {{ flight.flight_number }}</p>
+                            <p><strong>Origin:</strong> {{ flight.origin }}</p>
+                            <p><strong>Destination:</strong> {{ flight.destination }}</p>
+                            <p><strong>Price:</strong> ${{ "%.2f"|format(flight.price) }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Departure:</strong> {{ flight.departure_time.strftime('%Y-%m-%d %H:%M') }}</p>
+                            <p><strong>Arrival:</strong> {{ flight.arrival_time.strftime('%Y-%m-%d %H:%M') }}</p>
+                            <p><strong>Duration:</strong> 
+                                {% set duration = (flight.arrival_time - flight.departure_time) %}
+                                {{ '%dh %dm'|format(duration.total_seconds()//3600, (duration.total_seconds()%3600)//60) }}
+                            </p>
+                            <p>
+                                <strong>Status:</strong>
+                                {% if flight.departure_time > now %}
+                                    {% if flight.available_seats > 0 %}
+                                        <span class="badge bg-success">Available</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Full</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">Departed</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seat Availability -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Seat Availability</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h2 class="mb-0">{{ flight.available_seats }}/{{ flight.total_seats }}</h2>
+                            <p class="text-muted">Available Seats</p>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="progress" style="height: 20px;">
+                                {% set occupancy = ((flight.total_seats - flight.available_seats) / flight.total_seats * 100)|round|int %}
+                                <div class="progress-bar bg-{{ 'success' if occupancy < 80 else 'warning' if occupancy < 90 else 'danger' }}" 
+                                     role="progressbar" 
+                                     style="width: {{ occupancy }}%">
+                                    {{ occupancy }}% Occupied
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Passenger List -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Passenger List</h5>
+                </div>
+                <div class="card-body">
+                    {% if flight.bookings %}
+                    <div class="table-responsive">
+                        <table class="table" id="passengersTable">
+                            <thead>
+                                <tr>
+                                    <th>Booking Reference</th>
+                                    <th>Passenger</th>
+                                    <th>Email</th>
+                                    <th>Seats</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in flight.bookings %}
+                                <tr>
+                                    <td>{{ booking.booking_reference }}</td>
+                                    <td>{{ booking.user.first_name }} {{ booking.user.last_name }}</td>
+                                    <td>{{ booking.user.email }}</td>
+                                    <td>{{ booking.number_of_seats }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if booking.status == 'confirmed' else 'warning' }}">
+                                            {{ booking.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('employee.view_booking', reference=booking.booking_reference) }}" 
+                                           class="btn btn-sm btn-info">View Booking</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No passengers booked on this flight.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Flight Actions -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Flight Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editFlightModal">
+                            <i class="bi bi-pencil"></i> Edit Flight Details
+                        </button>
+                        {% if flight.departure_time > now %}
+                            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#cancelFlightModal">
+                                <i class="bi bi-x-circle"></i> Cancel Flight
+                            </button>
+                        {% endif %}
+                        <a href="{{ url_for('employee.export_passenger_list', flight_id=flight.id) }}" class="btn btn-success">
+                            <i class="bi bi-download"></i> Export Passenger List
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flight History -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Flight History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for event in flight.history %}
+                        <div class="timeline-item">
+                            <div class="timeline-date">{{ event.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
+                            <div class="timeline-content">
+                                <p class="mb-0">{{ event.description }}</p>
+                                <small class="text-muted">By {{ event.user.first_name }} {{ event.user.last_name }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Flight Modal -->
+<div class="modal fade" id="editFlightModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Flight Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('employee.edit_flight', flight_id=flight.id) }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Price</label>
+                        <input type="number" step="0.01" class="form-control" id="price" name="price" 
+                               value="{{ flight.price }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="departure_time" class="form-label">Departure Time</label>
+                        <input type="datetime-local" class="form-control" id="departure_time" name="departure_time"
+                               value="{{ flight.departure_time.strftime('%Y-%m-%dT%H:%M') }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="arrival_time" class="form-label">Arrival Time</label>
+                        <input type="datetime-local" class="form-control" id="arrival_time" name="arrival_time"
+                               value="{{ flight.arrival_time.strftime('%Y-%m-%dT%H:%M') }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Flight Modal -->
+<div class="modal fade" id="cancelFlightModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Flight</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this flight? This action cannot be undone.</p>
+                <p>All passengers will be notified and their bookings will be cancelled.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <form action="{{ url_for('employee.cancel_flight', flight_id=flight.id) }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Cancel Flight</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 40px;
+    margin-bottom: 20px;
+}
+
+.timeline-item:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background-color: #e9ecef;
+}
+
+.timeline-item:after {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #007bff;
+}
+
+.timeline-date {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.timeline-content {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#passengersTable').DataTable({
+            pageLength: 10,
+            responsive: true
+        });
+    });
+</script>
+{% endblock %}

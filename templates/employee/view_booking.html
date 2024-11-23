@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Booking Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Booking Details</h1>
+        <div>
+            <a href="{{ url_for('employee.bookings') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Bookings
+            </a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Booking Information -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Booking Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Booking Reference:</strong> {{ booking.booking_reference }}</p>
+                            <p><strong>Status:</strong> 
+                                <span class="badge bg-{{ 'success' if booking.status == 'confirmed' else 'warning' }}">
+                                    {{ booking.status }}
+                                </span>
+                            </p>
+                            <p><strong>Number of Seats:</strong> {{ booking.number_of_seats }}</p>
+                            <p><strong>Total Price:</strong> ${{ "%.2f"|format(booking.total_price) }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Booking Date:</strong> {{ booking.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                            <p><strong>Last Modified:</strong> {{ booking.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                            <p><strong>Payment Status:</strong> 
+                                <span class="badge bg-{{ 'success' if booking.payment_status == 'paid' else 'warning' }}">
+                                    {{ booking.payment_status }}
+                                </span>
+                            </p>
+                            {% if booking.payment_status == 'paid' %}
+                                <p><strong>Payment Date:</strong> {{ booking.payment_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flight Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Flight Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Flight Number:</strong> {{ booking.flight.flight_number }}</p>
+                            <p><strong>Route:</strong> {{ booking.flight.origin }} → {{ booking.flight.destination }}</p>
+                            <p><strong>Price per Seat:</strong> ${{ "%.2f"|format(booking.flight.price) }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Departure:</strong> {{ booking.flight.departure_time.strftime('%Y-%m-%d %H:%M') }}</p>
+                            <p><strong>Arrival:</strong> {{ booking.flight.arrival_time.strftime('%Y-%m-%d %H:%M') }}</p>
+                            <p><strong>Duration:</strong>
+                                {% set duration = (booking.flight.arrival_time - booking.flight.departure_time) %}
+                                {{ '%dh %dm'|format(duration.total_seconds()//3600, (duration.total_seconds()%3600)//60) }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ url_for('employee.view_flight', flight_id=booking.flight.id) }}" 
+                           class="btn btn-info">View Full Flight Details</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Passenger Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Passenger Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> {{ booking.user.first_name }} {{ booking.user.last_name }}</p>
+                            <p><strong>Email:</strong> {{ booking.user.email }}</p>
+                            <p><strong>Phone:</strong> {{ booking.user.phone }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Account Created:</strong> {{ booking.user.created_at.strftime('%Y-%m-%d') }}</p>
+                            <p><strong>Total Bookings:</strong> {{ booking.user.bookings|length }}</p>
+                            <p><strong>Status:</strong>
+                                <span class="badge bg-{{ 'success' if booking.user.is_active else 'danger' }}">
+                                    {{ 'Active' if booking.user.is_active else 'Inactive' }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Actions -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Booking Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if booking.status == 'pending' %}
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#confirmBookingModal">
+                                <i class="bi bi-check-circle"></i> Confirm Booking
+                            </button>
+                        {% endif %}
+                        {% if booking.status != 'cancelled' and booking.flight.departure_time > now %}
+                            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#cancelBookingModal">
+                                <i class="bi bi-x-circle"></i> Cancel Booking
+                            </button>
+                        {% endif %}
+                        <a href="{{ url_for('employee.download_ticket', reference=booking.booking_reference) }}" 
+                           class="btn btn-primary">
+                            <i class="bi bi-download"></i> Download Ticket
+                        </a>
+                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#sendEmailModal">
+                            <i class="bi bi-envelope"></i> Send Email
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking History -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Booking History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for event in booking.history %}
+                        <div class="timeline-item">
+                            <div class="timeline-date">{{ event.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
+                            <div class="timeline-content">
+                                <p class="mb-0">{{ event.description }}</p>
+                                <small class="text-muted">By {{ event.user.first_name }} {{ event.user.last_name }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Booking Modal -->
+<div class="modal fade" id="confirmBookingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Booking</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to confirm this booking?</p>
+                <p>The passenger will be notified via email.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <form action="{{ url_for('employee.confirm_booking', reference=booking.booking_reference) }}" 
+                      method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-success">Confirm Booking</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Booking Modal -->
+<div class="modal fade" id="cancelBookingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Booking</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('employee.cancel_booking', reference=booking.booking_reference) }}" method="POST">
+                <div class="modal-body">
+                    <p>Are you sure you want to cancel this booking?</p>
+                    <div class="mb-3">
+                        <label for="cancel_reason" class="form-label">Cancellation Reason</label>
+                        <textarea class="form-control" id="cancel_reason" name="reason" rows="3" required></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="notify_passenger" name="notify" checked>
+                        <label class="form-check-label" for="notify_passenger">
+                            Notify passenger via email
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-warning">Cancel Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Send Email Modal -->
+<div class="modal fade" id="sendEmailModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Send Email to Passenger</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('employee.send_email', reference=booking.booking_reference) }}" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="email_subject" class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="email_subject" name="subject" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email_message" class="form-label">Message</label>
+                        <textarea class="form-control" id="email_message" name="message" rows="5" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Send Email</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 40px;
+    margin-bottom: 20px;
+}
+
+.timeline-item:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background-color: #e9ecef;
+}
+
+.timeline-item:after {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #007bff;
+}
+
+.timeline-date {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.timeline-content {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+}
+</style>
+{% endblock %}

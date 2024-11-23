@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #dc3545; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f8f9fa; }
+        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+        .details { margin: 20px 0; }
+        .reason { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; margin: 15px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Booking Cancellation</h1>
+        </div>
+        <div class="content">
+            <p>Dear {{ user.first_name }},</p>
+            
+            <p>Your flight booking has been cancelled. Here are the details of the cancelled booking:</p>
+            
+            <div class="details">
+                <h3>Booking Information</h3>
+                <p><strong>Booking Reference:</strong> {{ booking.booking_reference }}</p>
+                <p><strong>Number of Seats:</strong> {{ booking.number_of_seats }}</p>
+                <p><strong>Total Price:</strong> ${{ "%.2f"|format(booking.total_price) }}</p>
+                
+                <h3>Flight Details</h3>
+                <p><strong>Flight Number:</strong> {{ flight.flight_number }}</p>
+                <p><strong>From:</strong> {{ flight.origin }}</p>
+                <p><strong>To:</strong> {{ flight.destination }}</p>
+                <p><strong>Departure:</strong> {{ flight.departure_time.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p><strong>Arrival:</strong> {{ flight.arrival_time.strftime('%Y-%m-%d %H:%M') }}</p>
+            </div>
+            
+            {% if reason %}
+            <div class="reason">
+                <h3>Cancellation Reason:</h3>
+                <p>{{ reason }}</p>
+            </div>
+            {% endif %}
+            
+            <p>If you believe this cancellation was made in error or have any questions, please contact our support team immediately.</p>
+            
+            <p>We apologize for any inconvenience caused.</p>
+            
+            <p>Thank you for your understanding.</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message, please do not reply to this email.</p>
+            <p>&copy; {{ now.year }} SkyBooker. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

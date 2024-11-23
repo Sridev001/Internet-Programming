@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Passenger Details</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Flight Summary -->
+                    <div class="flight-summary mb-4">
+                        <h4>Flight Details</h4>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Flight Number:</strong> {{ flight.flight_number }}</p>
+                                        <p><strong>From:</strong> {{ flight.origin }}</p>
+                                        <p><strong>To:</strong> {{ flight.destination }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Date:</strong> {{ flight.departure_time.strftime('%Y-%m-%d') }}</p>
+                                        <p><strong>Time:</strong> {{ flight.departure_time.strftime('%H:%M') }}</p>
+                                        <p><strong>Total Price:</strong> ${{ "%.2f"|format(booking.total_price) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Passenger Forms -->
+                    <form method="POST">
+                        {% for form in forms %}
+                        <div class="passenger-form mb-4">
+                            <h5>Passenger {{ loop.index }}</h5>
+                            {{ form.csrf_token }}
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-group">
+                                        {{ form.first_name.label(class="form-label") }}
+                                        {{ form.first_name(class="form-control") }}
+                                        {% if form.first_name.errors %}
+                                            {% for error in form.first_name.errors %}
+                                                <div class="invalid-feedback d-block">{{ error }}</div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-group">
+                                        {{ form.last_name.label(class="form-label") }}
+                                        {{ form.last_name(class="form-control") }}
+                                        {% if form.last_name.errors %}
+                                            {% for error in form.last_name.errors %}
+                                                <div class="invalid-feedback d-block">{{ error }}</div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-group">
+                                        {{ form.passport_number.label(class="form-label") }}
+                                        {{ form.passport_number(class="form-control") }}
+                                        {% if form.passport_number.errors %}
+                                            {% for error in form.passport_number.errors %}
+                                                <div class="invalid-feedback d-block">{{ error }}</div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-group">
+                                        {{ form.date_of_birth.label(class="form-label") }}
+                                        {{ form.date_of_birth(class="form-control", type="date") }}
+                                        {% if form.date_of_birth.errors %}
+                                            {% for error in form.date_of_birth.errors %}
+                                                <div class="invalid-feedback d-block">{{ error }}</div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Complete Booking</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

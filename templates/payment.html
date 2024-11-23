@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Payment Details</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Flight and Booking Summary -->
+                    <div class="booking-summary mb-4">
+                        <h4>Booking Summary</h4>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Flight Number:</strong> {{ flight.flight_number }}</p>
+                                        <p><strong>From:</strong> {{ flight.origin }}</p>
+                                        <p><strong>To:</strong> {{ flight.destination }}</p>
+                                        <p><strong>Number of Passengers:</strong> {{ booking.number_of_seats }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Date:</strong> {{ flight.departure_time.strftime('%Y-%m-%d') }}</p>
+                                        <p><strong>Time:</strong> {{ flight.departure_time.strftime('%H:%M') }}</p>
+                                        <p><strong>Price per Seat:</strong> ${{ "%.2f"|format(flight.price) }}</p>
+                                        <p><strong>Total Amount:</strong> ${{ "%.2f"|format(booking.total_price) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Form -->
+                    <form method="POST" id="payment-form">
+                        {{ form.csrf_token }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    {{ form.name_on_card.label(class="form-label") }}
+                                    {{ form.name_on_card(class="form-control") }}
+                                    {% if form.name_on_card.errors %}
+                                        {% for error in form.name_on_card.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    {{ form.card_number.label(class="form-label") }}
+                                    {{ form.card_number(class="form-control", placeholder="1234 5678 9012 3456") }}
+                                    {% if form.card_number.errors %}
+                                        {% for error in form.card_number.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ form.expiry_month.label(class="form-label") }}
+                                    {{ form.expiry_month(class="form-select") }}
+                                    {% if form.expiry_month.errors %}
+                                        {% for error in form.expiry_month.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ form.expiry_year.label(class="form-label") }}
+                                    {{ form.expiry_year(class="form-select") }}
+                                    {% if form.expiry_year.errors %}
+                                        {% for error in form.expiry_year.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ form.cvv.label(class="form-label") }}
+                                    {{ form.cvv(class="form-control", placeholder="123") }}
+                                    {% if form.cvv.errors %}
+                                        {% for error in form.cvv.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Format card number input
+    document.getElementById('card_number').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 16) {
+            value = value.slice(0, 16);
+        }
+        e.target.value = value;
+    });
+
+    // Format CVV input
+    document.getElementById('cvv').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 4) {
+            value = value.slice(0, 4);
+        }
+        e.target.value = value;
+    });
+</script>
+{% endblock %}

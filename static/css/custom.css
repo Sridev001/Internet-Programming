@@ -1,0 +1,149 @@
+:root {
+    --primary-color: #00ff9d;
+    --primary-dark: #00cc7d;
+    --dark-bg: #121212;
+    --dark-card: #1e1e1e;
+    --dark-input: #2d2d2d;
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0a0;
+    --border-color: #333333;
+}
+
+body {
+    background-color: var(--dark-bg);
+    color: var(--text-primary);
+}
+
+.card {
+    border: 1px solid var(--border-color);
+    background-color: var(--dark-card);
+    border-radius: 0.5rem;
+}
+
+.form-control {
+    border: 1px solid var(--border-color);
+    background-color: var(--dark-input);
+    color: var(--text-primary);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.form-control:focus {
+    background-color: var(--dark-input);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.15);
+    color: var(--text-primary);
+}
+
+.form-control::placeholder {
+    color: var(--text-secondary);
+}
+
+.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--dark-bg);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    color: var(--dark-bg);
+}
+
+.btn-outline-light {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-outline-light:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--dark-bg);
+}
+
+.bg-primary {
+    background-color: var(--dark-card) !important;
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.badge.bg-primary {
+    background-color: var(--primary-color) !important;
+    color: var(--dark-bg);
+}
+
+.invalid-feedback {
+    color: #ff6b6b;
+    font-size: 0.75rem;
+}
+
+.shadow-sm {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Hover effects */
+.hover-lift {
+    transition: transform 0.15s ease-in-out;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--primary-color);
+    color: var(--dark-bg);
+}
+
+/* Input focus styles */
+.form-control:focus {
+    outline: none;
+}
+
+/* Date input specific styles */
+input[type="date"] {
+    color-scheme: dark;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--dark-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
+
+.form-control-lg {
+    padding: 1rem 1.25rem;
+}
+
+.form-floating > .form-control-lg {
+    padding: 1rem 1.25rem;
+    height: calc(3.5rem + 2px);
+}
+
+.form-floating > label {
+    padding: 1rem 1.25rem;
+}

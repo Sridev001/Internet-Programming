@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Advanced Search{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Advanced Search</h1>
+        <a href="{{ url_for('employee.dashboard') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Search Form -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('employee.search') }}" id="searchForm">
+                        <div class="mb-3">
+                            <label class="form-label">Search Type</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="type" id="type-flight" value="flight" 
+                                       {{ 'checked' if type == 'flight' or not type }}>
+                                <label class="btn btn-outline-primary" for="type-flight">Flights</label>
+                                
+                                <input type="radio" class="btn-check" name="type" id="type-booking" value="booking"
+                                       {{ 'checked' if type == 'booking' }}>
+                                <label class="btn btn-outline-primary" for="type-booking">Bookings</label>
+                            </div>
+                        </div>
+
+                        <!-- Common Search Fields -->
+                        <div class="mb-3">
+                            <label for="query" class="form-label">Search Query</label>
+                            <input type="text" class="form-control" id="query" name="query" value="{{ query }}"
+                                   placeholder="Enter keywords...">
+                        </div>
+
+                        <!-- Flight-specific Fields -->
+                        <div id="flightFields" class="d-none">
+                            <div class="mb-3">
+                                <label for="origin" class="form-label">Origin</label>
+                                <input type="text" class="form-control" id="origin" name="origin" value="{{ origin }}"
+                                       placeholder="Departure city">
+                            </div>
+                            <div class="mb-3">
+                                <label for="destination" class="form-label">Destination</label>
+                                <input type="text" class="form-control" id="destination" name="destination" 
+                                       value="{{ destination }}" placeholder="Arrival city">
+                            </div>
+                            <div class="mb-3">
+                                <label for="date" class="form-label">Date</label>
+                                <input type="date" class="form-control" id="date" name="date" value="{{ date }}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="">All</option>
+                                    <option value="available" {{ 'selected' if status == 'available' }}>Available</option>
+                                    <option value="full" {{ 'selected' if status == 'full' }}>Full</option>
+                                    <option value="departed" {{ 'selected' if status == 'departed' }}>Departed</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Booking-specific Fields -->
+                        <div id="bookingFields" class="d-none">
+                            <div class="mb-3">
+                                <label for="reference" class="form-label">Booking Reference</label>
+                                <input type="text" class="form-control" id="reference" name="reference" 
+                                       value="{{ reference }}" placeholder="Booking reference">
+                            </div>
+                            <div class="mb-3">
+                                <label for="passenger" class="form-label">Passenger Name</label>
+                                <input type="text" class="form-control" id="passenger" name="passenger" 
+                                       value="{{ passenger }}" placeholder="Passenger name">
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ email }}"
+                                       placeholder="Passenger email">
+                            </div>
+                            <div class="mb-3">
+                                <label for="booking_status" class="form-label">Booking Status</label>
+                                <select class="form-select" id="booking_status" name="booking_status">
+                                    <option value="">All</option>
+                                    <option value="confirmed" {{ 'selected' if booking_status == 'confirmed' }}>Confirmed</option>
+                                    <option value="pending" {{ 'selected' if booking_status == 'pending' }}>Pending</option>
+                                    <option value="cancelled" {{ 'selected' if booking_status == 'cancelled' }}>Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Search Results</h5>
+                    {% if type == 'flight' and flights %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Flight Number</th>
+                                        <th>Route</th>
+                                        <th>Schedule</th>
+                                        <th>Seats</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for flight in flights %}
+                                    <tr>
+                                        <td>{{ flight.flight_number }}</td>
+                                        <td>{{ flight.origin }} → {{ flight.destination }}</td>
+                                        <td>{{ flight.departure_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td>{{ flight.available_seats }}/{{ flight.total_seats }}</td>
+                                        <td>
+                                            <a href="{{ url_for('employee.view_flight', flight_id=flight.id) }}" 
+                                               class="btn btn-sm btn-info">View Details</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% elif type == 'booking' and bookings %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Reference</th>
+                                        <th>Passenger</th>
+                                        <th>Flight</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in bookings %}
+                                    <tr>
+                                        <td>{{ booking.booking_reference }}</td>
+                                        <td>{{ booking.user.first_name }} {{ booking.user.last_name }}</td>
+                                        <td>{{ booking.flight.flight_number }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if booking.status == 'confirmed' else 'warning' }}">
+                                                {{ booking.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('employee.view_booking', reference=booking.booking_reference) }}" 
+                                               class="btn btn-sm btn-info">View Details</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No results found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateFormFields() {
+        const type = document.querySelector('input[name="type"]:checked').value;
+        const flightFields = document.getElementById('flightFields');
+        const bookingFields = document.getElementById('bookingFields');
+        
+        if (type === 'flight') {
+            flightFields.classList.remove('d-none');
+            bookingFields.classList.add('d-none');
+        } else {
+            flightFields.classList.add('d-none');
+            bookingFields.classList.remove('d-none');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateFormFields();
+        
+        document.querySelectorAll('input[name="type"]').forEach(radio => {
+            radio.addEventListener('change', updateFormFields);
+        });
+    });
+</script>
+{% endblock %}

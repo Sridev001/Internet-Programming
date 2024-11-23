@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - SkyBooker{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-3">Welcome to SkyBooker</h1>
+                <p class="lead mb-4">Find and book the best flights for your journey with our easy-to-use platform.</p>
+                <div class="d-flex gap-3">
+                    <a href="#search" class="btn btn-light btn-lg">
+                        <i class="bi bi-search me-2"></i>Search Flights
+                    </a>
+                    {% if not current_user.is_authenticated %}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-person-plus me-2"></i>Sign Up
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block text-center">
+                <img src="https://cdn-icons-png.flaticon.com/512/984/984233.png" alt="Flight Illustration" class="img-fluid" style="max-height: 300px;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <!-- Search Section -->
+    <div class="row justify-content-center mb-5" id="search">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <h3 class="h4 mb-1">Search Flights</h3>
+                        <p class="text-muted small mb-0">Find the best deals for your journey</p>
+                    </div>
+                    <form method="POST" action="{{ url_for('main.search_flights') }}" class="row g-3">
+                        {{ form.csrf_token }}
+                        
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">
+                                <i class="bi bi-geo-alt me-1"></i>From
+                            </label>
+                            {{ form.origin(class="form-control", placeholder="Departure city") }}
+                            {% if form.origin.errors %}
+                                {% for error in form.origin.errors %}
+                                    <div class="invalid-feedback d-block small">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">
+                                <i class="bi bi-geo me-1"></i>To
+                            </label>
+                            {{ form.destination(class="form-control", placeholder="Destination city") }}
+                            {% if form.destination.errors %}
+                                {% for error in form.destination.errors %}
+                                    <div class="invalid-feedback d-block small">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">
+                                <i class="bi bi-calendar3 me-1"></i>Departure Date
+                            </label>
+                            {{ form.departure_date(class="form-control", type="date") }}
+                            {% if form.departure_date.errors %}
+                                {% for error in form.departure_date.errors %}
+                                    <div class="invalid-feedback d-block small">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">
+                                <i class="bi bi-person me-1"></i>Passengers
+                            </label>
+                            {{ form.passengers(class="form-control", type="number", min="1", max="10", placeholder="Number of passengers") }}
+                            {% if form.passengers.errors %}
+                                {% for error in form.passengers.errors %}
+                                    <div class="invalid-feedback d-block small">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12 mt-4">
+                            {{ form.submit(class="btn btn-primary w-100") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Flights Section -->
+    {% if featured_flights %}
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h2 class="display-6">Featured Flights</h2>
+            <p class="text-muted">Discover our best deals on popular routes</p>
+        </div>
+        {% for flight in featured_flights %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">{{ flight.origin }} → {{ flight.destination }}</h5>
+                        <span class="badge bg-primary">{{ flight.flight_number }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-calendar3 me-2 text-primary"></i>
+                            <span>{{ flight.departure_time.strftime('%Y-%m-%d') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-clock me-2 text-primary"></i>
+                            <span>{{ flight.departure_time.strftime('%H:%M') }}</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-person me-2 text-primary"></i>
+                            <span>{{ flight.available_seats }} seats available</span>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0 text-primary">${{ "%.2f"|format(flight.price) }}</h4>
+                        <a href="{{ url_for('main.book_flight', flight_id=flight.id) }}" 
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-ticket-perforated me-2"></i>Book Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Features Section -->
+    <div class="row">
+        <div class="col-12 text-center mb-4">
+            <h2 class="display-6">Why Choose SkyBooker</h2>
+            <p class="text-muted">Experience the best in flight booking</p>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon bg-primary bg-gradient text-white rounded-circle mb-3 mx-auto" 
+                         style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h5 class="card-title">Secure Booking</h5>
+                    <p class="card-text text-muted">Book your flights with confidence using our secure payment system.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon bg-primary bg-gradient text-white rounded-circle mb-3 mx-auto" 
+                         style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-clock"></i>
+                    </div>
+                    <h5 class="card-title">24/7 Support</h5>
+                    <p class="card-text text-muted">Our customer support team is available round the clock to assist you.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon bg-primary bg-gradient text-white rounded-circle mb-3 mx-auto" 
+                         style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-tag"></i>
+                    </div>
+                    <h5 class="card-title">Best Prices</h5>
+                    <p class="card-text text-muted">Get the best deals on flights with our competitive pricing.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set minimum date to today
+        var today = new Date().toISOString().split('T')[0];
+        document.querySelector('input[type="date"]').setAttribute('min', today);
+
+        // Add hover effect to cards
+        const cards = document.querySelectorAll('.hover-lift');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-5px)';
+                card.style.transition = 'transform 0.2s ease-in-out';
+                card.style.boxShadow = '0 .5rem 1rem rgba(0,0,0,.15)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+                card.style.boxShadow = '0 .125rem .25rem rgba(0,0,0,.075)';
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #dc3545; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f8f9fa; }
+        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+        .details { margin: 20px 0; }
+        .alert { background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; margin: 15px 0; border-radius: 5px; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Flight Cancellation Notice</h1>
+        </div>
+        <div class="content">
+            <p>Dear {{ user.first_name }},</p>
+            
+            <p>We regret to inform you that your flight has been cancelled. Here are the details of the cancelled flight:</p>
+            
+            <div class="alert">
+                <p><strong>Important:</strong> Your booking has been automatically cancelled and a refund will be processed according to our cancellation policy.</p>
+            </div>
+            
+            <div class="details">
+                <h3>Booking Information</h3>
+                <p><strong>Booking Reference:</strong> {{ booking.booking_reference }}</p>
+                <p><strong>Number of Seats:</strong> {{ booking.number_of_seats }}</p>
+                <p><strong>Total Price:</strong> ${{ "%.2f"|format(booking.total_price) }}</p>
+                
+                <h3>Cancelled Flight Details</h3>
+                <p><strong>Flight Number:</strong> {{ flight.flight_number }}</p>
+                <p><strong>From:</strong> {{ flight.origin }}</p>
+                <p><strong>To:</strong> {{ flight.destination }}</p>
+                <p><strong>Original Departure:</strong> {{ flight.departure_time.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p><strong>Original Arrival:</strong> {{ flight.arrival_time.strftime('%Y-%m-%d %H:%M') }}</p>
+            </div>
+            
+            <h3>Next Steps</h3>
+            <ol>
+                <li>A refund will be processed to your original payment method within 5-7 business days.</li>
+                <li>You can book an alternative flight through our website or contact our support team for assistance.</li>
+                <li>If you have any questions about the refund process or need help booking a new flight, please contact our support team.</li>
+            </ol>
+            
+            <p>We sincerely apologize for any inconvenience this cancellation may have caused. We value your business and hope to serve you again in the future.</p>
+            
+            <p>Thank you for your understanding.</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message, please do not reply to this email.</p>
+            <p>&copy; {{ now.year }} SkyBooker. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
